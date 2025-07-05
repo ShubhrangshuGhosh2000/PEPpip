@@ -1,0 +1,361 @@
+import os
+import sys
+from pathlib import Path
+
+path_root = Path(__file__).parents[3]  # upto 'codebase' folder
+sys.path.insert(0, str(path_root))
+# print(sys.path)
+
+from utils import dl_reproducible_result_util
+import glob
+import joblib
+import matplotlib.pyplot as plt
+import pandas as pd
+import scipy.stats as stats
+import seaborn as sns
+
+from proc.img_p2ip.img_p2ip_trx.img_p2ip_trx_clf_train_struct_esmc_v2 import ImgP2ipTrx
+from utils import DockUtils
+from utils import PPIPUtils
+
+
+
+def load_final_ckpt_model(root_path='./', model_path='./', partial_model_name = 'ImgP2ipTrx'):
+    print('#### inside the load_final_ckpt_model() method - Start')
+    # create the final checkpoint file name with path
+    final_chkpt_path = os.path.join(model_path, partial_model_name + '*.ckpt' )
+    final_ckpt_file_name = glob.glob(final_chkpt_path, recursive=False)[0]
+    
+    ################################# TEMPORARY -START #################################
+    # final_ckpt_file_name = os.path.join(model_path, 'ImgP2ipTrx-epoch03-val_aupr0.82-last.ckpt')
+    ################################# TEMPORARY -END #################################
+
+    print('final_ckpt_file_name: ' + str(final_ckpt_file_name))
+    # load the model
+    model = ImgP2ipTrx.load_from_checkpoint(final_ckpt_file_name)
+    # # automatically restores model, epoch, step, LR schedulers, apex, etc...
+    # model = ImgP2ipTrx()
+    # trainer = pl.Trainer()
+    # trainer.fit(model, ckpt_path=final_ckpt_file_name)
+    # Please note that, all model hyper-params like batch_size, block_name, etc. can be retrieved 
+    # using model.hparams.config
+    print('#### inside the load_final_ckpt_model() method - End')
+    return model
+
+
+def calc_candidatePPI_p_val(root_path='./', model_path='./', docking_version='4_0', attn_mode='total', min_max_mode='R', no_random_shuffle=500
+                            , consider_fn=False, consider_full=False, pct=99.0, pcmp_mode='SCGB'):
+    print('\n #############################\n inside calc_candidatePPI_p_val() method - Start\n')
+    print('\n########## docking_version: ' + str(docking_version))
+    gt_contact_map_dir = os.path.join(root_path, f"dataset/preproc_data_docking_BM_{docking_version}/prot_gt_contact_map")
+    test_tag = model_path.split('/')[-1]
+    xai_result_dir = os.path.join(root_path, f'dataset/proc_data_tl_feat_to_img/img_p2ip_trx/xai_dock_{docking_version}/{test_tag}')
+    tp_pred_contact_map_proc_loc = os.path.join(xai_result_dir, 'tp_pred_contact_map_proc', f'attnMode_{attn_mode}', f'minMaxMode_{min_max_mode}', f'pcmp_mode_{pcmp_mode}')
+    fn_pred_contact_map_proc_loc = os.path.join(xai_result_dir, 'fn_pred_contact_map_proc', f'attnMode_{attn_mode}', f'minMaxMode_{min_max_mode}', f'pcmp_mode_{pcmp_mode}')
+    emd_result_dir = os.path.join(xai_result_dir, 'emd_result')
+
+    # Load model with hyperparameters
+    model = load_final_ckpt_model(root_path=root_path, model_path=model_path, partial_model_name = 'ImgP2ipTrx')
+    patch_size = model.hparams.config['patch_size']  # Retrieve from model hyperparams
+
+    # read gt_vs_pred_emd.csv file in a pandas dataframe
+    print('reading gt_vs_pred_emd.csv')
+    gt_vs_pred_emd_df = None
+    if(consider_full):
+        # consider full-version version of the interaction maps
+        gt_vs_pred_emd_df = pd.read_csv(os.path.join(emd_result_dir, f'gt_vs_pred_emd_full.csv'))
+    else:
+        # consider 99 percentile version of the interaction maps
+        gt_vs_pred_emd_df = pd.read_csv(os.path.join(emd_result_dir, f'gt_vs_pred_emd_9Xp.csv'))
+
+    # separate true-positive (tp) and false-negative (fn) result
+    print('separating true-positive (tp) and false-negative (fn) result')
+    tp_df = gt_vs_pred_emd_df[ (gt_vs_pred_emd_df['tp_fn'] == 'tp') & (gt_vs_pred_emd_df['attn_mode'] == attn_mode) & (gt_vs_pred_emd_df['min_max_mode'] == min_max_mode) & (gt_vs_pred_emd_df['pcmp_mode'] == pcmp_mode)]
+    tp_df = tp_df.reset_index(drop=True)
+    fn_df = gt_vs_pred_emd_df[ (gt_vs_pred_emd_df['tp_fn'] == 'fn') & (gt_vs_pred_emd_df['attn_mode'] == attn_mode) & (gt_vs_pred_emd_df['min_max_mode'] == min_max_mode) & (gt_vs_pred_emd_df['pcmp_mode'] == pcmp_mode)]
+    fn_df = fn_df.reset_index(drop=True)
+
+    candidatePPI_p_val_lst = []
+    # iterate over the tp_df and for each iteration, calculate candidate PPI p-value
+    for index, row in tp_df.iterrows():
+        print(f"\n ################# tp : starting {index}-th row out of {tp_df.shape[0]-1}\n")
+        prot_1_id, prot_2_id = row['prot_1_id'], row['prot_2_id']
+        # protein id has the format of [protein_name]_[chain_name]
+        protein_name, chain_1_name = prot_1_id.split('_')
+        protein_name, chain_2_name = prot_2_id.split('_')
+        print(f"protein_name: {protein_name} :: chain_1_name: {chain_1_name} :: chain_2_name: {chain_2_name}")
+        
+        # retrieve the gt_contact_map
+        print('retrieving the gt_contact_map...')
+        gt_contact_map_location = os.path.join(gt_contact_map_dir, f"contact_map_{protein_name}_{chain_1_name}_{chain_2_name}.pkl")
+        gt_contact_map = joblib.load(gt_contact_map_location)
+
+        # retrieve the pred_contact_map
+        print('retrieving the pred_contact_map...')
+        tp_pred_contact_map_path = os.path.join(tp_pred_contact_map_proc_loc, f"pred_contact_map_{protein_name}_{chain_1_name}_{chain_2_name}_attnMode_{attn_mode}_minMaxMode_{min_max_mode}_pcmp_mode_{pcmp_mode}.pkl")
+        # tp_pred_contact_map_path = os.path.join(tp_pred_contact_map_proc_loc, f"pred_contact_map_{protein_name}_{chain_1_name}_{chain_2_name}*.pkl")
+        pred_contact_map_lst = glob.glob(tp_pred_contact_map_path, recursive=False)
+        pred_contact_map = joblib.load(pred_contact_map_lst[0])
+
+        print(f'consider_full: {consider_full} :: attn_mode: {attn_mode} :: min_max_mode: {min_max_mode} :: pcmp_mode: {pcmp_mode}')
+        # retrieve the EMD between the pred_contact_map and gt_contact_map and name it as 'observed_emd'
+        observed_emd = row['emd']
+        print(f'observed_emd = EMD between the pred_contact_map and gt_contact_map = {observed_emd}')
+        
+        # randomly shuffle pred_contact_map (a 2D numpy array) along a specified axis multiple times and
+        # for each shuffling, calculate the EMD between shuffled version and gt_contact_map
+        print('randomly shuffle pred_contact_map (a 2D numpy array) along a specified axis multiple times and\n \
+                for each shuffling, calculate the EMD between shuffled version and gt_contact_map')
+        emd_for_shuffled_lst = DockUtils.shuffle_attention_map_and_calc_emd(pred_contact_map, gt_contact_map
+                                                                            , window_size=patch_size  # Critical model-dependent parameter
+                                                                            , axis=1, no_random_shuffle=no_random_shuffle, seed=456
+                                                                            , consider_full=consider_full, pct=pct)
+        # favourable case is counted when sampled_emd <= observed_emd
+        no_of_favourable_cases = 0
+        for sampled_emd in emd_for_shuffled_lst:
+            if(sampled_emd <= observed_emd):
+                no_of_favourable_cases += 1
+        # end of for loop: for sampled_emd in emd_for_shuffled_lst:
+        print(f'no_of_favourable_cases = {no_of_favourable_cases} :: no_random_shuffle = {no_random_shuffle}')
+        # calculate indiv_candidatePPI_p_val
+        print('calculating indiv_candidatePPI_p_val')
+        indiv_candidatePPI_p_val = float(no_of_favourable_cases)/float(no_random_shuffle)
+        # append indiv_candidatePPI_p_val at the candidatePPI_p_val_lst
+        candidatePPI_p_val_lst.append(indiv_candidatePPI_p_val)
+    # end of for loop: for index, row in tp_df.iterrows():
+
+    # conditionally consider fn
+    print(f'\n consider_fn: {consider_fn}')
+    if(consider_fn):
+        print('Also considering fn ...')
+        # iterate over the fn_df and for each iteration, calculate candidate PPI p-value
+        for index, row in fn_df.iterrows():
+            print(f"\n ################# fn : starting {index}-th row out of {fn_df.shape[0]-1}\n")
+            prot_1_id, prot_2_id = row['prot_1_id'], row['prot_2_id']
+            # protein id has the format of [protein_name]_[chain_name]
+            protein_name, chain_1_name = prot_1_id.split('_')
+            protein_name, chain_2_name = prot_2_id.split('_')
+            print(f"protein_name: {protein_name} :: chain_1_name: {chain_1_name} :: chain_2_name: {chain_2_name}")
+            
+            # retrieve the gt_contact_map
+            print('retrieving the gt_contact_map...')
+            gt_contact_map_location = os.path.join(gt_contact_map_dir, f"contact_map_{protein_name}_{chain_1_name}_{chain_2_name}.pkl")
+            gt_contact_map = joblib.load(gt_contact_map_location)
+
+            # retrieve the pred_contact_map
+            print('retrieving the pred_contact_map...')
+            fn_pred_contact_map_path = os.path.join(fn_pred_contact_map_proc_loc, f"pred_contact_map_{protein_name}_{chain_1_name}_{chain_2_name}_attnMode_{attn_mode}_minMaxMode_{min_max_mode}_pcmp_mode_{pcmp_mode}.pkl")
+            pred_contact_map_lst = glob.glob(fn_pred_contact_map_path, recursive=False)
+            pred_contact_map = joblib.load(pred_contact_map_lst[0])
+
+            print(f'consider_full: {consider_full} :: attn_mode: {attn_mode} :: min_max_mode: {min_max_mode} :: pcmp_mode: {pcmp_mode}')
+            # retrieve the EMD between the pred_contact_map and gt_contact_map and name it as 'observed_emd'
+            observed_emd = row['emd']
+            print(f'observed_emd = EMD between the pred_contact_map and gt_contact_map = {observed_emd}')
+            
+            # randomly shuffle attention_map (a 2D numpy array) along a specified axis multiple times and
+            # for each shuffling, calculate the EMD between shuffled version and gt_contact_map
+            print('randomly shuffle pred_contact_map (a 2D numpy array) along a specified axis multiple times and\n \
+                    for each shuffling, calculate the EMD between shuffled version and gt_contact_map')
+            emd_for_shuffled_lst = DockUtils.shuffle_attention_map_and_calc_emd(pred_contact_map, gt_contact_map, axis=1, no_random_shuffle=no_random_shuffle, seed=456
+                                                                                 , consider_full=consider_full, pct=pct)
+            # favourable case is counted when sampled_emd <= observed_emd
+            no_of_favourable_cases = 0
+            for sampled_emd in emd_for_shuffled_lst:
+                if(sampled_emd <= observed_emd):
+                    no_of_favourable_cases += 1
+            # end of for loop: for sampled_emd in emd_for_shuffled_lst:
+            print(f'no_of_favourable_cases = {no_of_favourable_cases} :: no_random_shuffle = {no_random_shuffle}')
+            # calculate indiv_candidatePPI_p_val
+            print('calculating indiv_candidatePPI_p_val')
+            indiv_candidatePPI_p_val = float(no_of_favourable_cases)/float(no_random_shuffle)
+            # append indiv_candidatePPI_p_val at the candidatePPI_p_val_lst
+            candidatePPI_p_val_lst.append(indiv_candidatePPI_p_val)
+        # end of for loop: for index, row in fn_df.iterrows():
+    # end of if block: if(consider_fn):
+    
+    # save candidatePPI_p_val_lst as a pkl file
+    print('saving candidatePPI_p_val_lst as a pkl file')
+    tTest_result_dir = os.path.join(xai_result_dir, 'tTest_result')
+    PPIPUtils.createFolder(tTest_result_dir)
+    candidatePPI_p_val_lst_loc = os.path.join(tTest_result_dir, f"candPPI_pVal_lst_considerFN_{consider_fn}_considerFull_{consider_full}_attnMode_{attn_mode}_minMaxMode_{min_max_mode}_pcmp_mode_{pcmp_mode}.pkl")
+    joblib.dump(value=candidatePPI_p_val_lst, filename=candidatePPI_p_val_lst_loc, compress=3)
+    print('\n #############################\n inside calc_candidatePPI_p_val() method - End\n')
+
+
+def perform_one_tailed_t_test(root_path='./', model_path='./', docking_version='4_0', consider_fn=False, consider_full=False, attn_mode='total', min_max_mode='R', pcmp_mode='SCGB'):
+    print('\n #############################\n inside perform_one_tailed_t_test() method - Start\n')
+    print('\n########## docking_version: ' + str(docking_version))
+    test_tag = model_path.split('/')[-1]
+    xai_result_dir = os.path.join(root_path, f'dataset/proc_data_tl_feat_to_img/img_p2ip_trx/xai_dock_{docking_version}/{test_tag}')
+    tTest_result_dir = os.path.join(xai_result_dir, 'tTest_result')
+    candidatePPI_p_val_lst_loc = os.path.join(tTest_result_dir, f"candPPI_pVal_lst_considerFN_{consider_fn}_considerFull_{consider_full}_attnMode_{attn_mode}_minMaxMode_{min_max_mode}_pcmp_mode_{pcmp_mode}.pkl")
+    # load candidatePPI_p_val_lst from pkl file
+    candidatePPI_p_val_lst = joblib.load(candidatePPI_p_val_lst_loc)
+    # perform one-sample one-tailed (less than) t-test
+    result = stats.ttest_1samp(candidatePPI_p_val_lst, popmean=0.5, alternative='less')
+    print(f'result:: t-statistic = {result.statistic} ; p-value = {result.pvalue}')
+    # interpret the p-value
+    print('interpreting the p-value')
+    alpha = 0.05  # significance level
+    print(f'alpha: {alpha}')
+    p = result.pvalue
+    conclusion = 'None'
+    if p > alpha:
+        print('Same proportions of errors (fail to reject H0)')
+        conclusion = 'fail to reject H0'
+    else:
+        print('Different proportions of errors (reject H0)')
+        conclusion = 'reject H0'
+    # create a result dictionary and save it
+    one_tailed_t_test_res_dict = {'consider_fn': consider_fn, 'consider_full': consider_full, 'attrMode': attn_mode, 'minMaxMode': min_max_mode, 'pcmp_mode': pcmp_mode
+                                  , 't-statistic': result.statistic, 'p-value': result.pvalue, 'alpha': alpha, 'conclusion': conclusion}
+    one_tailed_t_test_res_dict_loc = os.path.join(tTest_result_dir, f"t_test_res_dict_considerFN_{consider_fn}_considerFull_{consider_full}_attnMode_{attn_mode}_minMaxMode_{min_max_mode}_pcmp_mode_{pcmp_mode}.pkl")
+    joblib.dump(value=one_tailed_t_test_res_dict, filename=one_tailed_t_test_res_dict_loc, compress=3)
+    print('\n #############################\n inside perform_one_tailed_t_test() method - End\n')
+    return one_tailed_t_test_res_dict
+
+
+def generate_single_violin_plot(data_frame=None, save_plot_fl_nm_loc='./'):
+    print('\n #############################\n inside generate_single_violin_plot() method - Start\n')
+    # Create a figure and axis using seaborn
+    fig, ax = plt.subplots(figsize=(8, 5))
+
+    # Plot the violin plot using seaborn with different colors
+    sns.violinplot(x='Category', y='Values', data=data_frame, ax=ax
+                , palette=sns.color_palette("Paired"),  # print(sns.color_palette("pastel6").as_hex())
+                inner='box', legend='full')
+
+    # Set Y-axis range
+    ax.set_ylim(0.0, 1.0)
+
+    # Add a straight line along y=0.5
+    ax.axhline(y=0.5, color='black', linestyle='--', label='y=0.5')
+    # Add text to specify the value on the Y-axis
+    ax.text(x=-0.70, y=0.49, s='0.5', color='black', fontsize=10)
+
+    # Set plot labels and title
+    ax.set_title("Violin Plot of p-values for 'Positive' and 'Negative'")
+    ax.set_xlabel("")
+    ax.set_ylabel("p-values")
+    # ax.legend()
+
+    # Save the plot as PNG
+    plt.savefig(save_plot_fl_nm_loc, dpi=300, bbox_inches='tight')
+    print('\n #############################\n inside generate_single_violin_plot() method - End\n')
+
+
+def gen_violin_plt_of_pVal_for_tlStructEsmc(root_path='./', docking_version='4_0'):
+    print('\n #############################\n inside gen_violin_plt_of_pVal_for_tlStructEsmc method - Start\n')
+    print('\n########## docking_version: ' + str(docking_version))
+    test_tag = 'CDAMViT_tlStructEsmc_r400p16'
+    consider_full = True  # consider full-version of the interaction maps for all plots
+    attn_mode = 'total'
+    min_max_mode = 'R'
+    pcmp_mode = 'SCGB'
+    
+    xai_result_dir = os.path.join(root_path, f'dataset/proc_data_tl_feat_to_img/img_p2ip_trx/xai_dock_{docking_version}/{test_tag}')
+    common_plots_dir = os.path.join(xai_result_dir, f'common_plots')
+    PPIPUtils.createFolder(common_plots_dir)
+
+    # generate violin plot for tlStructEsmc features
+    print('generating violin plot for tlStructEsmc features')
+    tTest_result_dir = os.path.join(xai_result_dir, 'tTest_result')
+    # first fetch the p-value list for only true-positive (i.e. consider_fn=False) cases
+    consider_fn=False
+    candidatePPI_p_val_lst_fn_False_loc = os.path.join(tTest_result_dir, f"candPPI_pVal_lst_considerFN_{consider_fn}_considerFull_{consider_full}_attnMode_{attn_mode}_minMaxMode_{min_max_mode}_pcmp_mode_{pcmp_mode}.pkl")
+    # load candidatePPI_p_val_lst from pkl file
+    candidatePPI_p_val_lst_fn_False = joblib.load(candidatePPI_p_val_lst_fn_False_loc)
+    # next fetch the p-value list for both true-positive and false negative (i.e. consider_fn=True) cases
+    consider_fn=True
+    candidatePPI_p_val_lst_fn_True_loc = os.path.join(tTest_result_dir, f"candPPI_pVal_lst_considerFN_{consider_fn}_considerFull_{consider_full}_attnMode_{attn_mode}_minMaxMode_{min_max_mode}_pcmp_mode_{pcmp_mode}.pkl")
+    # load candidatePPI_p_val_lst from pkl file
+    candidatePPI_p_val_lst_fn_True = joblib.load(candidatePPI_p_val_lst_fn_True_loc)
+    # next derive p_val_lst_tp and p_val_lst_fn
+    p_val_lst_tp = candidatePPI_p_val_lst_fn_False
+    # Derive p_val_lst_fn by considering only the second part of candidatePPI_p_val_lst_fn_True, appended after candidatePPI_p_val_lst_fn_False (refer calc_candidatePPI_p_val() method)
+    p_val_lst_fn = candidatePPI_p_val_lst_fn_True.copy()  # Now, p_val_lst_fn contains p_val_lst_tp + our required p_val_lst_fn
+    for p_val in p_val_lst_tp:
+        p_val_lst_fn.remove(p_val)
+    # # create dataframe required for the violin plot generation
+    # tlStructEsmc_violin_plt_df = pd.DataFrame({'Category': ['Positive'] * len(p_val_lst_tp_struct) + ['Negative'] * len(p_val_lst_fn_struct)
+    #                     , 'Values': p_val_lst_tp_struct + p_val_lst_fn_struct})
+    # # specify location to save the violin plot
+    # tlStructEsmc_violin_plt_save_loc = os.path.join(common_plots_dir, f'violin_plt_tlStructEsmc.png')
+    # generate_single_violin_plot(data_frame=tlStructEsmc_violin_plt_df, save_plot_fl_nm_loc=tlStructEsmc_violin_plt_save_loc)
+
+    # finally, generate consolidated violin plot for tlStructEsmc features together
+    print('generating consolidated violin plot for tlStructEsmc features together')
+    # create dataframe required for the violin plot generation
+    tlStructEsmc_violin_plt_df = pd.DataFrame({'Category': ['Positive'] * len(p_val_lst_tp) + ['Negative'] * len(p_val_lst_fn)
+                                        , 'Values': p_val_lst_tp + p_val_lst_fn})
+    # specify location to save the violin plot
+    tlStructEsmc_violin_plt_save_loc = os.path.join(common_plots_dir, f'violin_plt_pVal_tlStructEsmc.png')
+    generate_single_violin_plot(data_frame=tlStructEsmc_violin_plt_df, save_plot_fl_nm_loc=tlStructEsmc_violin_plt_save_loc)
+    print('\n #############################\n inside gen_violin_plt_of_pVal_for_tlStructEsmc method - End\n')
+
+
+
+if __name__ == '__main__':
+    root_path = os.path.join('/scratch/pralaycs/Shubh_Working_Remote/PPI_Wkspc/PPI_Code/mat_p2ip_prj_working/')
+    model_path = os.path.join(root_path, 'dataset/proc_data_tl_feat_to_img/img_p2ip_trx/train/CDAMViT_tlStructEsmc_r400p16')
+    
+    no_random_shuffle = 500  # 500, 1000, 1500
+    consider_full_lst = [True]  # True, False  # consider full-version or 99 percentile version of the interaction maps
+    consider_fn_lst = [False, True]  # True, False  # include false-negative in the calculation
+    docking_version_lst = ['5_5']  # '4_0', '5_5'
+
+    attn_mode_lst = ['total']  # 'total', 'prot_trans', 'esmc', 'prose'
+    # ############# IN FINAL VERSION OF PUBLIC CODE, REMOVE  "min_max_mode" and perform only 'R' mode ############# #
+    min_max_mode_lst = ['N']  # 'N' => normal min-max for TP and reverse min-max for FN; 'R' => reverse min-max for TP and normal min-max for FN;
+    # ############# IN FINAL VERSION OF PUBLIC CODE, REMOVE  "min_max_mode" and perform only 'R' mode ############# #
+
+    # predicted interaction map process (pcmp) mode
+    # S => Statistical Potential; C => Clustering; G => Graph smoothing; B => Binarization
+    # 'SCGB' is recommended; Biophysics first, removes impossible interactions early. Clustering then removes scattered noise. 
+    # Graph ensures smoothness. Adaptive threshold binarization keeps structure intact.
+    # 'CSGB' works well if pred_map is highly noisy. Removes false positives early.
+    pcmp_mode_lst = ['SCGB']  # 'SCGB', 'CSGB'
+    
+    pct = 99.0  # percentile
+
+    for docking_version in docking_version_lst:
+        print('\n########## docking_version: ' + str(docking_version))
+        one_tailed_t_test_res_dict_lst = [] 
+        for consider_full in consider_full_lst:
+            print('\n########## consider_full: ' + str(consider_full))
+            for consider_fn in consider_fn_lst:
+                print('\n########## consider_fn: ' + str(consider_fn))
+                for attn_mode in attn_mode_lst:
+                    print('\n########## attn_mode: ' + str(attn_mode))
+                    for min_max_mode in min_max_mode_lst:
+                        print('\n########## min_max_mode: ' + str(min_max_mode))
+                        for pcmp_mode in pcmp_mode_lst:
+                            print('\n########## pcmp_mode: ' + str(pcmp_mode))
+                            calc_candidatePPI_p_val(root_path=root_path, model_path=model_path, docking_version=docking_version, attn_mode=attn_mode, min_max_mode=min_max_mode
+                                                , no_random_shuffle=no_random_shuffle, consider_fn=consider_fn, consider_full=consider_full, pct=pct, pcmp_mode=pcmp_mode)
+                            one_tailed_t_test_res_dict = perform_one_tailed_t_test(root_path=root_path, model_path=model_path, docking_version=docking_version
+                                                                               , attn_mode=attn_mode, min_max_mode=min_max_mode, consider_fn=consider_fn, consider_full=consider_full, pcmp_mode=pcmp_mode)
+                            one_tailed_t_test_res_dict_lst.append(one_tailed_t_test_res_dict)
+                        # End of for loop: for pcmp_mode in pcmp_mode_lst:
+                    # end of for loop: for min_max_mode in min_max_mode_lst:
+                # end of for loop: for attn_mode in attn_mode_lst:
+            # end of for loop: for consider_fn in consider_fn_lst:
+        # end of for loop: for consider_full in consider_full_lst:
+        # create a pandas dataframe from one_tailed_t_test_res_dict_lst and save it
+        one_tailed_t_test_res_df = pd.DataFrame(one_tailed_t_test_res_dict_lst)
+        # save one_tailed_t_test_res_df
+        test_tag = model_path.split('/')[-1]
+        xai_result_dir = os.path.join(root_path, f'dataset/proc_data_tl_feat_to_img/img_p2ip_trx/xai_dock_{docking_version}/{test_tag}')
+        one_tailed_t_test_res_df.to_csv(os.path.join(xai_result_dir, 'tTest_result', 'one_tailed_t_test_res.csv'), index=False)
+    # end of for loop: for docking_version in docking_version_lst:
+
+
+    # # ################ generate violin plot of p-values for tlStructEsmc
+    # print('################ generating violin plot of p-values for tlStructEsmc features...')
+    # docking_version_lst = ['4_0']  # '4_0', '5_5'
+    # for docking_version in docking_version_lst:
+    #     print('\n########## docking_version: ' + str(docking_version))
+    #     gen_violin_plt_of_pVal_for_tlStructEsmc(root_path=root_path, docking_version=docking_version)
+
+    

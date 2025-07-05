@@ -1,0 +1,17 @@
+dataset/
+cross_spec_pred_result/
+uniprot_sprot.fasta
+__pycache__/
+temp_result*
+temp_per_prot_emb_result*
+dscript_lm_v1.pt
+lm_v1.sav
+topsy_turvy_v1.sav
+*launch.json
+mdout.mdp
+temp_naccess/
+temp_Scwrl4/
+ps_batch_submit_script/*/*.out
+#*#
+step*.pdb*
+res
