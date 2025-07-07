@@ -18,7 +18,7 @@ from proc.img_p2ip.dock_img_p2ip_datamodule_struct import DockImgP2ipCustomDataM
 from proc.img_p2ip.img_p2ip_cnn.img_p2ip_cnn_clf_train_struct import ImgP2ipCnn
 
 
-def preproc_test_result_before_attr_calc(root_path='./', model_path='./', docking_version='4_0'):
+def preproc_test_result_before_attr_calc(root_path='./', model_path='./', docking_version='5_5'):
     print('#### inside the preproc_test_result_before_attr_calc() method - Start')
     print('\n########## docking_version: ' + str(docking_version))
     # retrieve the docking_version specific prediction result
@@ -74,7 +74,7 @@ def load_final_ckpt_model(root_path='./', model_path='./', partial_model_name = 
     return model
 
 
-def prepare_test_data(root_path='./', model=None, docking_version='4_0'):
+def prepare_test_data(root_path='./', model=None, docking_version='5_5'):
     print('#### inside the prepare_test_data() method - Start')
     print('\n########## docking_version: ' + str(docking_version))
     test_data_module = DockImgP2ipCustomDataModule(root_path=root_path, batch_size=model.hparams.config['batch_size']
@@ -89,7 +89,7 @@ def prepare_test_data(root_path='./', model=None, docking_version='4_0'):
     return custom_test_dataset
 
 
-def calc_attribution(root_path='./', model_path='./', partial_model_name = 'ImgP2ipCnn', docking_version='4_0', device_type='cpu'):
+def calc_attribution(root_path='./', model_path='./', partial_model_name = 'ImgP2ipCnn', docking_version='5_5', device_type='cpu'):
     print('\n #############################\n inside the calc_attribution() method - Start\n')
     print('\n########## docking_version: ' + str(docking_version))
     # load the final checkpointed model
@@ -160,7 +160,7 @@ def calc_attribution(root_path='./', model_path='./', partial_model_name = 'ImgP
     return con_attr_dict_lst
 
 
-def postproc_attr_result(root_path='./', model_path='./', docking_version='4_0', con_attr_dict_lst=None):
+def postproc_attr_result(root_path='./', model_path='./', docking_version='5_5', con_attr_dict_lst=None):
     print('\n #############################\n inside the postproc_attr_result() method - Start\n')
     print('\n########## docking_version: ' + str(docking_version))
     # # load species specific con_attr_dict_lst
@@ -253,7 +253,7 @@ if __name__ == '__main__':
     partial_model_name = 'ImgP2ipCnn'
     device_type = 'cuda'
 
-    docking_version_lst = ['5_5']  # '4_0', '5_5'
+    docking_version_lst = ['5_5']  # '5_5', '5_5'
     for docking_version in docking_version_lst:
         print('\n########## docking_version: ' + str(docking_version))
         ############## preprocessing before attribution calculation 

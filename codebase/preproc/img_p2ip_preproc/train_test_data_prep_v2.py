@@ -2,8 +2,6 @@ import os
 import sys
 from pathlib import Path
 import joblib
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 path_root = Path(__file__).parents[2]  
 sys.path.insert(0, str(path_root))

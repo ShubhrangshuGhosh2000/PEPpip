@@ -18,7 +18,7 @@ from utils import DockUtils
 from utils import PPIPUtils
 
 
-def create_predicted_contact_map(root_path='./', model_path='./', docking_version='4_0'):
+def create_predicted_contact_map(root_path='./', model_path='./', docking_version='5_5'):
     print('\n #############################\n inside the create_predicted_contact_map() method - Start\n')
     print('\n########## docking_version: ' + str(docking_version))
 
@@ -163,7 +163,7 @@ def create_pred_attr_map_2d(non_zero_pxl_indx_lst_lst, non_zero_pxl_tot_attr_lst
     return pred_attr_map_2d
 
 
-def calculate_emd_betwn_gt_and_pred_contact_maps(root_path='./', model_path='./', docking_version='4_0', consider_full=False):
+def calculate_emd_betwn_gt_and_pred_contact_maps(root_path='./', model_path='./', docking_version='5_5', consider_full=False):
     print('\n #############################\n inside the calculate_emd_betwn_gt_and_pred_contact_maps() method - Start\n')
     print('\n########## docking_version: ' + str(docking_version))
     gt_contact_map_dir = os.path.join(root_path, f"dataset/preproc_data_docking_BM_{docking_version}/prot_gt_contact_map")
@@ -395,7 +395,7 @@ if __name__ == '__main__':
     # partial_model_name = 'ImgP2ipCnn'
 
     consider_full_lst = [True, False]  # True, False  # consider full-version or 99 percentile version of the interaction maps
-    docking_version_lst = ['4_0', '5_5']  # '4_0', '5_5'
+    docking_version_lst = ['5_5', '5_5']  # '5_5', '5_5'
     for docking_version in docking_version_lst:
         print('\n########## docking_version: ' + str(docking_version))
         create_predicted_contact_map(root_path=root_path, model_path=model_path, docking_version=docking_version)

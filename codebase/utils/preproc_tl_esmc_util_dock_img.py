@@ -26,7 +26,7 @@ def load_esmc_model(esmc_model_path='./', esmc_model_name = 'esmc_600m'):
 
 
 # use esmc model to extract the features for a given list of sequences 
-def extract_feat_from_esmc(prot_id_lst, seq_lst, esmc_model_path='./', esmc_model_name = 'esmc_600m', docking_version = '4_0'):
+def extract_feat_from_esmc(prot_id_lst, seq_lst, esmc_model_path='./', esmc_model_name = 'esmc_600m', docking_version = '5_5'):
     # first load esmc Model which will be used subsequently
     model = load_esmc_model(esmc_model_path, esmc_model_name)
     # next extract the features using the loaded model

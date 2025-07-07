@@ -17,7 +17,7 @@ from proc.img_p2ip.dock_img_p2ip_dataset_struct import DockImgP2ipCustomDataset
 
 
 class DockImgP2ipCustomDataModule(L.LightningDataModule):
-    def __init__(self, root_path='./', batch_size=16, workers=4, img_resoln=256, spec_type='human', docking_version='4_0', dbl_combi_flg=False, weighted_sampling=False):
+    def __init__(self, root_path='./', batch_size=16, workers=4, img_resoln=256, spec_type='human', docking_version='5_5', dbl_combi_flg=False, weighted_sampling=False):
         super().__init__()
         self.root_path = root_path
         self.batch_size = batch_size

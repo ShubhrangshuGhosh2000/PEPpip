@@ -2,7 +2,6 @@ import os
 import sys
 from pathlib import Path
 import joblib
-import pandas as pd
 import numpy as np
 path_root = Path(__file__).parents[2]  
 sys.path.insert(0, str(path_root))

@@ -7,7 +7,7 @@ import joblib
 # create custom dataset class
 class DockImgP2ipCustomDataset(Dataset):
     # constuctor
-    def __init__(self, root_path='./', spec_type='human', docking_version='4_0', partial_twoD_prot_feat_dict=None, man_2d_feat_dict=None, oneD_aa_feat_dict=None
+    def __init__(self, root_path='./', spec_type='human', docking_version='5_5', partial_twoD_prot_feat_dict=None, man_2d_feat_dict=None, oneD_aa_feat_dict=None
                  , pp_pair_lst_lsts=None, class_label_lst=None, img_resoln=256, transform=None):
         super(DockImgP2ipCustomDataset, self).__init__()
         # # twoD_prot_feat_dict contains all the 2d-tl features of the protein and is of length n x 1024 where n = protein length

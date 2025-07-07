@@ -16,7 +16,7 @@ from utils import DockUtils
 from utils import PPIPUtils
 
 
-def calc_candidatePPI_p_val(root_path='./', model_path='./', docking_version='4_0', no_random_shuffle=500, consider_fn=False, consider_full=False):
+def calc_candidatePPI_p_val(root_path='./', model_path='./', docking_version='5_5', no_random_shuffle=500, consider_fn=False, consider_full=False):
     print('\n #############################\n inside calc_candidatePPI_p_val() method - Start\n')
     print('\n########## docking_version: ' + str(docking_version))
     gt_contact_map_dir = os.path.join(root_path, f"dataset/preproc_data_docking_BM_{docking_version}/prot_gt_contact_map")
@@ -166,7 +166,7 @@ def calc_candidatePPI_p_val(root_path='./', model_path='./', docking_version='4_
     print('\n #############################\n inside calc_candidatePPI_p_val() method - End\n')
 
 
-def perform_one_tailed_t_test(root_path='./', model_path='./', docking_version='4_0', consider_fn=False, consider_full=False):
+def perform_one_tailed_t_test(root_path='./', model_path='./', docking_version='5_5', consider_fn=False, consider_full=False):
     print('\n #############################\n inside perform_one_tailed_t_test() method - Start\n')
     print('\n########## docking_version: ' + str(docking_version))
     test_tag = model_path.split('/')[-1]
@@ -208,7 +208,7 @@ if __name__ == '__main__':
     no_random_shuffle = 500
     consider_full_lst = [True, False]  # True, False  # consider full-version or 99 percentile version of the interaction maps
     consider_fn_lst = [False, True]  # True, False  # include false-negative in the calculation
-    docking_version_lst = ['4_0', '5_5']  # '4_0', '5_5'
+    docking_version_lst = ['5_5', '5_5']  # '5_5', '5_5'
     for docking_version in docking_version_lst:
         print('\n########## docking_version: ' + str(docking_version))
         one_tailed_t_test_res_dict_lst = [] 

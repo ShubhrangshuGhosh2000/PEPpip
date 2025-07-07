@@ -6,7 +6,6 @@ sys.path.insert(0, str(path_root))
 import pandas as pd
 import torch
 import joblib
-import numpy as np
 from torch.utils.data import DataLoader
 from proc.img_p2ip.img_p2ip_dataset_train_full_struct_esmc_v2 import ImgP2ipCustomDataset
 

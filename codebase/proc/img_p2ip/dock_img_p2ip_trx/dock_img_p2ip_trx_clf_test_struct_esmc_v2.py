@@ -44,7 +44,7 @@ def load_final_ckpt_model(root_path='./', model_path='./', partial_model_name = 
     return model
 
 
-def prepare_test_data(root_path='./', model=None, docking_version='4_0'):
+def prepare_test_data(root_path='./', model=None, docking_version='5_5'):
     print('#### inside the prepare_test_data() method - Start')
     test_data_module = DockImgP2ipCustomDataModule(root_path=root_path, batch_size=model.hparams.config['batch_size']
                                                , workers= 2  # os.cpu_count() - 5  # model.hparams.config['num_workers']
@@ -56,7 +56,7 @@ def prepare_test_data(root_path='./', model=None, docking_version='4_0'):
     return test_data_module
 
 
-def test_model(root_path='./', model_path='./', partial_model_name = 'ImgP2ipTrx', docking_version='4_0'):
+def test_model(root_path='./', model_path='./', partial_model_name = 'ImgP2ipTrx', docking_version='5_5'):
     print('\n #############################\n inside the test_model() method - Start\n')
     print('# #############################\n')
     print('\n########## docking_version: ' + str(docking_version))
@@ -180,7 +180,7 @@ def test_model(root_path='./', model_path='./', partial_model_name = 'ImgP2ipTrx
     print('#### inside the test_model() method - End')
 
 
-def start(root_path='./', model_path='./', partial_model_name = 'ImgP2ipTrx', docking_version='4_0'):
+def start(root_path='./', model_path='./', partial_model_name = 'ImgP2ipTrx', docking_version='5_5'):
     test_model(root_path=root_path, model_path=model_path, partial_model_name=partial_model_name, docking_version=docking_version)
 
 
@@ -190,7 +190,7 @@ if __name__ == '__main__':
     model_path = os.path.join(root_path, 'dataset/proc_data_tl_feat_to_img/img_p2ip_trx/train/CDAMViT_tlStructEsmc_r400p16')
     partial_model_name = 'ImgP2ipTrx'
 
-    docking_version_lst = ['5_5']  # '4_0', '5_5'
+    docking_version_lst = ['5_5']  # '5_5', '5_5'
     for docking_version in docking_version_lst:
         print('\n########## docking_version: ' + str(docking_version))
         start(root_path=root_path, model_path=model_path, partial_model_name=partial_model_name, docking_version=docking_version)

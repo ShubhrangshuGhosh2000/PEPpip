@@ -18,7 +18,7 @@ from utils import DockUtils
 from utils import PPIPUtils
 
 
-def calc_candidatePPI_p_val(root_path='./', model_path='./', docking_version='4_0', attr_mode='prose', min_max_mode='R', no_random_shuffle=500
+def calc_candidatePPI_p_val(root_path='./', model_path='./', docking_version='5_5', attr_mode='prose', min_max_mode='R', no_random_shuffle=500
                             , consider_fn=False, consider_full=False, pct=99.0, pcmp_mode='SCGB'):
     print('\n #############################\n inside calc_candidatePPI_p_val() method - Start\n')
     print('\n########## docking_version: ' + str(docking_version))
@@ -152,7 +152,7 @@ def calc_candidatePPI_p_val(root_path='./', model_path='./', docking_version='4_
     print('\n #############################\n inside calc_candidatePPI_p_val() method - End\n')
 
 
-def perform_one_tailed_t_test(root_path='./', model_path='./', docking_version='4_0', consider_fn=False, consider_full=False, attr_mode='prose', min_max_mode='R', pcmp_mode='SCGB'):
+def perform_one_tailed_t_test(root_path='./', model_path='./', docking_version='5_5', consider_fn=False, consider_full=False, attr_mode='prose', min_max_mode='R', pcmp_mode='SCGB'):
     print('\n #############################\n inside perform_one_tailed_t_test() method - Start\n')
     print('\n########## docking_version: ' + str(docking_version))
     test_tag = model_path.split('/')[-1]
@@ -215,7 +215,7 @@ def generate_single_violin_plot(data_frame=None, save_plot_fl_nm_loc='./'):
     print('\n #############################\n inside generate_single_violin_plot() method - End\n')
 
 
-def gen_violin_plt_of_pVal_for_tlStructEsmc(root_path='./', docking_version='4_0'):
+def gen_violin_plt_of_pVal_for_tlStructEsmc(root_path='./', docking_version='5_5'):
     print('\n #############################\n inside gen_violin_plt_of_pVal_for_tlStructEsmc method - Start\n')
     print('\n########## docking_version: ' + str(docking_version))
     test_tag = 'ResNet_tlStructEsmc_r400n18DnoWS'
@@ -273,7 +273,7 @@ if __name__ == '__main__':
     no_random_shuffle = 500  # 500, 1000, 1500
     consider_full_lst = [True]  # True, False  # consider full-version or 99 percentile version of the interaction maps
     consider_fn_lst = [False, True]  # True, False  # include false-negative in the calculation
-    docking_version_lst = ['5_5']  # '4_0', '5_5'
+    docking_version_lst = ['5_5']  # '5_5', '5_5'
 
     attr_mode_lst = ['total']  # 'total', 'prot_trans', 'esmc', 'prose'
     # ############# IN FINAL VERSION OF PUBLIC CODE, REMOVE  "min_max_mode" and perform only 'R' mode ############# #
@@ -323,7 +323,7 @@ if __name__ == '__main__':
 
     # # ################ generate violin plot of p-values for tlStructEsmc
     # print('################ generating violin plot of p-values for tlStructEsmc features...')
-    # docking_version_lst = ['4_0']  # '4_0', '5_5'
+    # docking_version_lst = ['5_5']  # '5_5', '5_5'
     # for docking_version in docking_version_lst:
     #     print('\n########## docking_version: ' + str(docking_version))
     #     gen_violin_plt_of_pVal_for_tlStructEsmc(root_path=root_path, docking_version=docking_version)

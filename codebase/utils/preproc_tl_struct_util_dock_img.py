@@ -32,7 +32,7 @@ def load_prose_tl_struct_model(prose_model_path='./', prose_model_name = 'prose_
 
 
 # use prose model(s) to extract the features for a given list of sequences 
-def extract_feat_from_prose(prot_id_lst, seq_lst, prose_model_path='./', prose_model_name = 'prose_mt_3x1024', docking_version = '4_0'):
+def extract_feat_from_prose(prot_id_lst, seq_lst, prose_model_path='./', prose_model_name = 'prose_mt_3x1024', docking_version = '5_5'):
     # first load prose Model which will be used subsequently
     model = load_prose_tl_struct_model(prose_model_path, prose_model_name)
     # next extract the features using the loaded model

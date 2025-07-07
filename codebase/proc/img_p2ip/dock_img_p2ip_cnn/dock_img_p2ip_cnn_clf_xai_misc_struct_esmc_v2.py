@@ -17,7 +17,7 @@ import matplotlib.pyplot as plt
 from utils import DockUtils, PPIPUtils, ProteinContactMapUtils
 
 
-def create_predicted_contact_map(root_path='./', model_path='./', docking_version='4_0', min_max_mode='R', attr_mode='total', pcmp_mode='SCGB'):
+def create_predicted_contact_map(root_path='./', model_path='./', docking_version='5_5', min_max_mode='R', attr_mode='total', pcmp_mode='SCGB'):
     print('\n #############################\n inside the create_predicted_contact_map() method - Start\n')
     print('\n########## docking_version: ' + str(docking_version))
     # The directory for the saved PDB files
@@ -201,7 +201,7 @@ def create_pred_attr_map_2d(non_zero_pxl_indx_lst_lst, pxl_attr_lst, attr_mode):
     return pred_attr_map_2d
 
 
-def calculate_emd_betwn_gt_and_pred_contact_maps(root_path='./', model_path='./', docking_version='4_0'
+def calculate_emd_betwn_gt_and_pred_contact_maps(root_path='./', model_path='./', docking_version='5_5'
                                                  , consider_full=False, min_max_mode='R', attr_mode='total'
                                                  , pct=99.0, pcmp_mode='SCGB'):
     print('\n #############################\n inside the calculate_emd_betwn_gt_and_pred_contact_maps() method - Start\n')
@@ -334,7 +334,7 @@ def calculate_emd_betwn_gt_and_pred_contact_maps(root_path='./', model_path='./'
     return emd_res_df
 
 
-def create_consolidated_emd_res_csv(emd_res_df_lst=None, root_path='./', model_path='./', docking_version='4_0'
+def create_consolidated_emd_res_csv(emd_res_df_lst=None, root_path='./', model_path='./', docking_version='5_5'
                                                  , consider_full=False):
     print('\n #############################\n inside the create_consolidated_emd_res_csv() method - Start\n')
     print('\n########## docking_version: ' + str(docking_version))
@@ -486,7 +486,7 @@ if __name__ == '__main__':
     # partial_model_name = 'ImgP2ipCnn'
 
     pct = 99.0  # percentile
-    docking_version_lst = ['5_5']  # '4_0', '5_5'
+    docking_version_lst = ['5_5']  # '5_5', '5_5'
     consider_full_lst = [True]  # True, False  # consider full-version or 99 percentile version of the interaction maps
     attr_mode_lst = ['total', 'prot_trans', 'esmc', 'prose']  # 'total', 'prot_trans', 'esmc', 'prose'
     
