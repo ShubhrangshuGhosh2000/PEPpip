@@ -75,7 +75,7 @@ def create_hybrid_score(spec_type = 'ecoli', img_pip_cnn_data_path = './', img_p
 
 if __name__ == '__main__':
     # root_path = os.path.join('/project/root/directory/path/here')
-    root_path = os.path.join('/scratch/pralaycs/Shubh_Working_Remote/PPI_Wkspc/PPI_Code/mat_p2ip_prj_working')  
+      
 
     img_pip_cnn_test_tag = 'ResNet_tlStructEsmc_r400n18DnoWS_epoch37_noWS'
     img_pip_trx_test_tag = 'CDAMViT_tlStructEsmc_r400p16'

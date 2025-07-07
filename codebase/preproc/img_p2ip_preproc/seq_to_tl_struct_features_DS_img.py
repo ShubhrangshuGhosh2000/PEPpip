@@ -25,7 +25,7 @@ def prepare_tl_struct_feat_for_DS_seq_for_img(root_path='./', prose_model_path='
 
 if __name__ == '__main__':
     root_path = os.path.join('/project/root/directory/path/here')
-    root_path = os.path.join('/scratch/pralaycs/Shubh_Working_Remote/PPI_Wkspc/PPI_Code/mat_p2ip_prj_working')
+    
 
     # spec_type_lst = ['yeast', 'human', 'ecoli', 'fly', 'mouse', 'worm']
     spec_type_lst = ['mouse', 'worm']

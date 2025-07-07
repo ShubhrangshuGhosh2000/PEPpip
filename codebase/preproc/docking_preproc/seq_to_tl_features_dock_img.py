@@ -71,7 +71,7 @@ def create_2d_tl_feat_dict_dump(root_path='./', docking_version = '4_0'):
 
 if __name__ == '__main__':
     root_path = os.path.join('/project/root/directory/path/here')
-    root_path = os.path.join('/scratch/pralaycs/Shubh_Working_Remote/PPI_Wkspc/PPI_Code/mat_p2ip_prj_working')
+    
     docking_version = '4_0'  # '4_0', '5_5'
     # prepare_tl_feat_for_dock_seq_for_img(root_path
     #                                 ,protTrans_model_path=os.path.join(root_path, '../ProtTrans_Models/')

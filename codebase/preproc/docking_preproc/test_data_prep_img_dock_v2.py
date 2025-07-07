@@ -36,7 +36,7 @@ def make_test_pp_pair_list(root_path='./', docking_version = '4_0', restricted_l
 
 if __name__ == '__main__':
     root_path = os.path.join('/project/root/directory/path/here')
-    root_path = os.path.join('/scratch/pralaycs/Shubh_Working_Remote/PPI_Wkspc/PPI_Code/mat_p2ip_prj_working')
+    
 
     restricted_len = 400
     docking_version_lst = ['4_0', '5_5']  # '4_0', '5_5'

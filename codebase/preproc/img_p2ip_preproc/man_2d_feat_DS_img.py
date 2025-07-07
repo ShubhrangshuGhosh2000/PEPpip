@@ -211,7 +211,7 @@ class Man2DfeatForImg(object):
 
 if __name__ == '__main__':
     root_path = os.path.join('/project/root/directory/path/here')
-    root_path = os.path.join('/scratch/pralaycs/Shubh_Working_Remote/PPI_Wkspc/PPI_Code/mat_p2ip_prj_working')
+    
 
     # for dumping each individual 2d manual feature matrix
     man2d_featureFolder = os.path.join(root_path, 'dataset/preproc_data_DS/derived_feat/')

@@ -150,7 +150,7 @@ def calculate_contact_maps_parallel(root_path='./', docking_version = '4_0', dis
 
 if __name__ == "__main__":
     root_path = os.path.join('/project/root/directory/path/here')
-    root_path = os.path.join('/scratch/pralaycs/Shubh_Working_Remote/PPI_Wkspc/PPI_Code/mat_p2ip_prj_working')
+    
     # root_path = os.path.join('/home/Shubh_Working_Ubuntu/Workspaces/PPI_Wkspc/PPI_Code/mat_p2ip_prj_working')
 
     docking_version = '4_0'  # '4_0', '5_5'

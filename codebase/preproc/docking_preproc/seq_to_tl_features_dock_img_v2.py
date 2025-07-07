@@ -46,7 +46,7 @@ def prepare_tl_feat_for_dock_seq_for_img(root_path='./', protTrans_model_path='.
 
 if __name__ == '__main__':
     root_path = os.path.join('/project/root/directory/path/here')
-    root_path = os.path.join('/scratch/pralaycs/Shubh_Working_Remote/PPI_Wkspc/PPI_Code/mat_p2ip_prj_working')
+    
     docking_version = '5_5'  # '4_0', '5_5'
     restricted_len = 400
     prepare_tl_feat_for_dock_seq_for_img(root_path, protTrans_model_path=os.path.join(root_path, '../ProtTrans_Models/')

@@ -295,7 +295,7 @@ def create_len_limited_seq_and_test_csv(root_path='./', dock_benchmark_ver = 'BM
 
 if __name__ == "__main__":
     root_path = os.path.join('/project/root/directory/path/here')
-    root_path = os.path.join('/scratch/pralaycs/Shubh_Working_Remote/PPI_Wkspc/PPI_Code/mat_p2ip_prj_working')
+    
     # root_path = os.path.join('/home/Shubh_Working_Ubuntu/Workspaces/PPI_Wkspc/PPI_Code/mat_p2ip_prj_working')
 
     dock_benchmark_ver = 'BM_4_0'  # BM_5_5, BM_4_0

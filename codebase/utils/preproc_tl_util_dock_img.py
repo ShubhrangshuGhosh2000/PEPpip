@@ -9,7 +9,7 @@ import torch
 from transformers import T5EncoderModel, T5Tokenizer
 
 root_path = os.path.join('/project/root/directory/path/here')
-root_path = os.path.join('/scratch/pralaycs/Shubh_Working_Remote/PPI_Wkspc/PPI_Code/mat_p2ip_prj_working')
+
 
 
 # load ProtTrans tl-model for the given type of model

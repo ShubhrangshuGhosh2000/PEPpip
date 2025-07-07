@@ -102,7 +102,7 @@ def calc_mean_sd_whole_img_dataset(root_path='./', spec_type='human', img_resoln
 
 if __name__ == '__main__':
     root_path = os.path.join('/project/root/directory/path/here')
-    root_path = os.path.join('/scratch/pralaycs/Shubh_Working_Remote/PPI_Wkspc/PPI_Code/mat_p2ip_prj_working')
+    
 
     img_resoln_lst = [256, 400, 800]
     # img_resoln_lst = [256]

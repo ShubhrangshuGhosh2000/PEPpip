@@ -91,7 +91,7 @@ def make_train_test_pp_pair_list(root_path='./', spec_type = 'human', restricted
 
 if __name__ == '__main__':
     root_path = os.path.join('/project/root/directory/path/here')
-    root_path = os.path.join('/scratch/pralaycs/Shubh_Working_Remote/PPI_Wkspc/PPI_Code/mat_p2ip_prj_working')
+    
 
     restricted_len = 400
     # spec_type_lst = ['ecoli', 'fly', 'mouse', 'worm', 'yeast', 'human']
