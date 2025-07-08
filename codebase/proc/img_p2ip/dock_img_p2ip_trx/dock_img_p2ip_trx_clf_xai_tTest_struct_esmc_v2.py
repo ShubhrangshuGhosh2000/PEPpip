@@ -297,7 +297,7 @@ def gen_violin_plt_of_pVal_for_tlStructEsmc(root_path='./', docking_version='5_5
 
 
 if __name__ == '__main__':
-    root_path = os.path.join('/scratch/pralaycs/Shubh_Working_Remote/PPI_Wkspc/PPI_Code/mat_p2ip_prj_working/')
+    root_path = os.path.join('/project/root/directory/path/here')
     model_path = os.path.join(root_path, 'dataset/proc_data_tl_feat_to_img/img_p2ip_trx/train/CDAMViT_tlStructEsmc_r400p16')
     
     no_random_shuffle = 500  # 500, 1000, 1500

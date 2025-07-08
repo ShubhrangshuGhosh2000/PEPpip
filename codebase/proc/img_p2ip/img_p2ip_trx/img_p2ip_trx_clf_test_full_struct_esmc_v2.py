@@ -179,7 +179,7 @@ def start(root_path='./', model_path='./', partial_model_name = 'ImgP2ipTrx', sp
 
 
 if __name__ == '__main__':
-    root_path = os.path.join('/scratch/pralaycs/Shubh_Working_Remote/PPI_Wkspc/PPI_Code/mat_p2ip_prj_working/')
+    root_path = os.path.join('/project/root/directory/path/here')
     model_path = os.path.join(root_path, 'dataset/proc_data_tl_feat_to_img/img_p2ip_trx/train/CDAMViT_tlStructEsmc_r400p16_fullTrain')
     partial_model_name = 'ImgP2ipTrx'
 

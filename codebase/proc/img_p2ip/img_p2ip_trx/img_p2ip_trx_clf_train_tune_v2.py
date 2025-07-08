@@ -519,7 +519,7 @@ def start(root_path='./', model_name = 'CDAMViT'):
 
 
 if __name__ == '__main__':
-    root_path = os.path.join('/scratch/pralaycs/Shubh_Working_Remote/PPI_Wkspc/PPI_Code/mat_p2ip_prj_working/')
+    root_path = os.path.join('/project/root/directory/path/here')
     # # prv_ckpt_path would be None for the fresh training
     # prv_ckpt_path = None
     # prv_ckpt_path = os.path.join(root_path, 'dataset/proc_data_tl_feat_to_img/img_p2ip_trx/train/CDAMViT')
