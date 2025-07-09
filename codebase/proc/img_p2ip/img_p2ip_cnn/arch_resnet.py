@@ -1,8 +1,7 @@
 import torch.nn as nn
 from types import SimpleNamespace
 
-# ##################### Normal ResNetBlock #####################
-# ref: https://lightning.ai/docs/pytorch/stable/notebooks/course_UvA-DL/04-inception-resnet-densenet.html
+
 class ResNetBlock(nn.Module):
     def __init__(self, c_in, act_fn, subsample=False, c_out=-1):
         """
@@ -15,22 +14,19 @@ class ResNetBlock(nn.Module):
         super().__init__()
         if not subsample:
             c_out = c_in
-
-        # Network representing F
         self.net = nn.Sequential(
             nn.Conv2d(
                 c_in, c_out, kernel_size=3, padding=1, stride=1 if not subsample else 2, bias=False
-            ),  # No bias needed as the Batch Norm handles it
+            ),  
             nn.BatchNorm2d(c_out),
             act_fn(),
             nn.Conv2d(c_out, c_out, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(c_out),
         )
-
-        # 1x1 convolution with stride 2 means we take the upper left value, and transform it to new output size
         self.downsample = nn.Conv2d(c_in, c_out, kernel_size=1, stride=2) if subsample else None
         self.act_fn = act_fn()
-
+    
+    
     def forward(self, x):
         z = self.net(x)
         if self.downsample is not None:
@@ -40,8 +36,6 @@ class ResNetBlock(nn.Module):
         return out
 
 
-# ##################### PreActivation ResNetBlock #####################
-# ref: https://lightning.ai/docs/pytorch/stable/notebooks/course_UvA-DL/04-inception-resnet-densenet.html
 class PreActResNetBlock(nn.Module):
     def __init__(self, c_in, act_fn, subsample=False, c_out=-1):
         """
@@ -54,8 +48,6 @@ class PreActResNetBlock(nn.Module):
         super().__init__()
         if not subsample:
             c_out = c_in
-
-        # Network representing F
         self.net = nn.Sequential(
             nn.BatchNorm2d(c_in),
             act_fn(),
@@ -64,14 +56,13 @@ class PreActResNetBlock(nn.Module):
             act_fn(),
             nn.Conv2d(c_out, c_out, kernel_size=3, padding=1, bias=False),
         )
-
-        # 1x1 convolution needs to apply non-linearity as well as not done on skip connection
         self.downsample = (
             nn.Sequential(nn.BatchNorm2d(c_in), act_fn(), nn.Conv2d(c_in, c_out, kernel_size=1, stride=2, bias=False))
             if subsample
             else None
         )
-
+    
+    
     def forward(self, x):
         z = self.net(x)
         if self.downsample is not None:
@@ -80,14 +71,10 @@ class PreActResNetBlock(nn.Module):
         return out
 
 
-# ################## hyper-parameter declaration - start ###############################
 resnet_blocks_by_name = {"ResNetBlock": ResNetBlock, "PreActResNetBlock": PreActResNetBlock}
 act_fn_by_name = {"tanh": nn.Tanh, "relu": nn.ReLU, "leakyrelu": nn.LeakyReLU, "gelu": nn.GELU}
-# ################## hyper-parameter declaration - end ###############################
 
 
-# ##################### ResNet architecture definition #####################
-# ref: https://lightning.ai/docs/pytorch/stable/notebooks/course_UvA-DL/04-inception-resnet-densenet.html
 class ResNet(nn.Module):
     def __init__(
         self,
@@ -118,13 +105,11 @@ class ResNet(nn.Module):
         )
         self._create_network()
         self._init_params()
-
-
+    
+    
     def _create_network(self):
         c_hidden = self.hparams.c_hidden
-
-        # A first convolution on the original image to scale up the channel size
-        if self.hparams.block_class == PreActResNetBlock:  # => Don't apply non-linearity on output
+        if self.hparams.block_class == PreActResNetBlock:  
             self.input_net = nn.Sequential(nn.Conv2d(3, c_hidden[0], kernel_size=3, padding=1, bias=False))
         else:
             self.input_net = nn.Sequential(
@@ -132,12 +117,9 @@ class ResNet(nn.Module):
                 nn.BatchNorm2d(c_hidden[0]),
                 self.hparams.act_fn(),
             )
-
-        # Creating the ResNet blocks
         blocks = []
         for grp_idx, block_count in enumerate(self.hparams.num_blocks):
             for block_idx in range(block_count):
-                # Subsample the first block of each group, except the very first one.
                 subsample = block_idx == 0 and grp_idx > 0
                 blocks.append(
                     self.hparams.block_class(
@@ -148,25 +130,22 @@ class ResNet(nn.Module):
                     )
                 )
         self.blocks = nn.Sequential(*blocks)
-
-        # Mapping to classification output
         self.output_net = nn.Sequential(
             nn.AdaptiveAvgPool2d((1, 1)), nn.Flatten(), nn.Linear(c_hidden[-1], self.hparams.num_classes)
         )
-
+    
+    
     def _init_params(self):
-        # Based on our discussion in Tutorial 4, we should initialize the convolutions according to the activation function
-        # Fan-out focuses on the gradient distribution, and is commonly used in ResNets
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity=self.hparams.act_fn_name)
             elif isinstance(m, nn.BatchNorm2d):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
-
+    
+    
     def forward(self, x):
         x = self.input_net(x)
         x = self.blocks(x)
         x = self.output_net(x)
         return x
-
