@@ -9,12 +9,10 @@ import torch.nn.functional as F
 import lightning as L
 import gc
 import glob
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn.calibration import CalibrationDisplay
-from proc.img_p2ip.img_p2ip_trx_datamodule_struct_esmc_v2 import ImgP2ipCustomDataModule
-from proc.img_p2ip.img_p2ip_trx.img_p2ip_trx_clf_train_struct_esmc_v2 import ImgP2ipTrx
+from codebase.proc.img_p2ip.img_p2ip_trx_datamodule_train_full import ImgP2ipCustomDataModule
+from proc.img_p2ip.img_p2ip_trx.img_p2ip_trx_clf_train_full import ImgP2ipTrx
 from utils import PPIPUtils
 
 
@@ -98,7 +96,6 @@ def test_model(root_path='./', model_path='./', partial_model_name = 'ImgP2ipTrx
     score_df = pd.DataFrame({'Species': [spec_type]
                     , 'AUPR': [score_dict['AUPR']], 'Precision': [score_dict['Precision']]
                     , 'Recall': [score_dict['Recall']], 'AUROC': [score_dict['AUROC']]
-                    , 'NPV': [score_dict['NPV']]
                     })
     score_df_name_with_loc = os.path.join(test_result_dir, spec_type + '_pred_score.csv')
     score_df.to_csv(score_df_name_with_loc, index=False)
@@ -111,22 +108,9 @@ def start(root_path='./', model_path='./', partial_model_name = 'ImgP2ipTrx', sp
     test_model(root_path=root_path, model_path=model_path, partial_model_name=partial_model_name, spec_type=spec_type)
 
 
-def plot_prob_calibration_graph(root_path='./', model_path='./', spec_type='ecoli'):
-    test_tag = model_path.split('/')[-1]
-    test_result_dir = os.path.join(root_path, 'dataset/proc_data_tl_feat_to_img/img_p2ip_trx/test/dscript_other_spec_' + test_tag, spec_type)
-    test_res_file_nm_with_loc = os.path.join(test_result_dir, spec_type + '_pred_res.csv')
-    pred_result_df = pd.read_csv(test_res_file_nm_with_loc)
-    y_true = pred_result_df['actual_res'].to_numpy()
-    y_prob = pred_result_df['pred_prob_1'].to_numpy()
-    calib_disp = CalibrationDisplay.from_predictions(y_true, y_prob, name=f'VC')
-    calib_disp.plot()
-    calib_graph_nm = f'{spec_type}_prob_calib_graph_vc.png'
-    plt.savefig(os.path.join(test_result_dir, calib_graph_nm), dpi=300)
-
-
 if __name__ == '__main__':
     root_path = os.path.join('/project/root/directory/path/here')
-    model_path = os.path.join(root_path, 'dataset/proc_data_tl_feat_to_img/img_p2ip_trx/train/CDAMViT_tlStructEsmc_r400p16_lossBasedChkpt')
+    model_path = os.path.join(root_path, 'dataset/proc_data_tl_feat_to_img/img_p2ip_trx/train/CDAMViT_tlStructEsmc_r400p16_fullTrain')
     partial_model_name = 'ImgP2ipTrx'
     spec_type_lst = ['human', 'ecoli', 'fly', 'mouse', 'worm', 'yeast']  
     for spec_type in spec_type_lst:

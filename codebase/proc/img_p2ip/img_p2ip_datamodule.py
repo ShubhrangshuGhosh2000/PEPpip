@@ -10,7 +10,7 @@ import pandas as pd
 from torch.utils.data import DataLoader
 from torch.utils.data import WeightedRandomSampler
 from torchvision import transforms
-from proc.img_p2ip.img_p2ip_trx_dataset_train_full_struct_esmc_v2 import ImgP2ipCustomDataset
+from codebase.proc.img_p2ip.img_p2ip_dataset import ImgP2ipCustomDataset
 
 
 class ImgP2ipCustomDataModule(L.LightningDataModule):
@@ -46,13 +46,17 @@ class ImgP2ipCustomDataModule(L.LightningDataModule):
             class_label_lst_val = joblib.load(os.path.join(preproc_data_path, 'class_label_test_' + self.spec_type + '.pkl'))
             if(self.weighted_sampling):
                 class_weights = torch.Tensor([100.0/90, 100.0/10])  
-                sample_weights = [0] * len(class_label_lst_train + class_label_lst_val)
-                for idx, label in enumerate(class_label_lst_train + class_label_lst_val):
+                sample_weights = [0] * len(class_label_lst_train)
+                for idx, label in enumerate(class_label_lst_train):
                     sample_weights[idx] = class_weights[int(label)]
                 self.sample_weights = sample_weights
             self.train_data = ImgP2ipCustomDataset(root_path=self.root_path, spec_type=self.spec_type
-                                                    , pp_pair_lst_lsts = pp_pair_lst_lsts_train + pp_pair_lst_lsts_val
-                                                    , class_label_lst = class_label_lst_train + class_label_lst_val
+                                                    , pp_pair_lst_lsts = pp_pair_lst_lsts_train
+                                                    , class_label_lst = class_label_lst_train
+                                                    , img_resoln=self.img_resoln, transform=self.transform)
+            self.val_data = ImgP2ipCustomDataset(root_path=self.root_path, spec_type=self.spec_type
+                                                    , pp_pair_lst_lsts = pp_pair_lst_lsts_val
+                                                    , class_label_lst = class_label_lst_val 
                                                     , img_resoln=self.img_resoln, transform=self.transform)
         elif(stage == "test"):  
             pp_pair_lst_lsts_test, class_label_lst_test = None, None
@@ -75,6 +79,11 @@ class ImgP2ipCustomDataModule(L.LightningDataModule):
                             , num_workers=self.workers, pin_memory= True if(torch.cuda.is_available()) else False
                             , shuffle=True)
         return train_loader
+    
+    
+    def val_dataloader(self):
+        return DataLoader(self.val_data, batch_size=int(self.batch_size)
+        , num_workers=self.workers, pin_memory= True if(torch.cuda.is_available()) else False)
     
     
     def test_dataloader(self):

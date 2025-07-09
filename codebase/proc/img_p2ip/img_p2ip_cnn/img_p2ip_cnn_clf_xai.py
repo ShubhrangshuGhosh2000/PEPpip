@@ -10,8 +10,8 @@ import torch
 import numpy as np
 import pandas as pd
 from captum.attr import IntegratedGradients
-from proc.img_p2ip.img_p2ip_datamodule_struct_esmc_v2 import ImgP2ipCustomDataModule
-from proc.img_p2ip.img_p2ip_cnn.img_p2ip_cnn_clf_train_struct_esmc_v2 import ImgP2ipCnn
+from codebase.proc.img_p2ip.img_p2ip_datamodule import ImgP2ipCustomDataModule
+from proc.img_p2ip.img_p2ip_cnn.img_p2ip_cnn_clf_train import ImgP2ipCnn
 from utils import PPIPUtils
 
 

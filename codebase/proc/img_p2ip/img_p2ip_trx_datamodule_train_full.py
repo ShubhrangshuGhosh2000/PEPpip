@@ -10,7 +10,7 @@ import pandas as pd
 from torch.utils.data import DataLoader
 from torch.utils.data import WeightedRandomSampler
 from torchvision import transforms
-from proc.img_p2ip.img_p2ip_dataset_train_full_struct_esmc_v2 import ImgP2ipCustomDataset
+from codebase.proc.img_p2ip.img_p2ip_trx_dataset_train_full import ImgP2ipCustomDataset
 
 
 class ImgP2ipCustomDataModule(L.LightningDataModule):
@@ -27,7 +27,7 @@ class ImgP2ipCustomDataModule(L.LightningDataModule):
     
     def setup(self, stage=None):
         preproc_data_path = os.path.join(self.root_path, 'dataset/preproc_data_DS/train_test_list_dump')
-        mean_std_train_df = pd.read_csv(os.path.join(self.root_path, 'dataset/preproc_data_tl_feat_to_img/train_test_list_dump', 'mean_std_train_full_manTlStruct.csv'))
+        mean_std_train_df = pd.read_csv(os.path.join(self.root_path, 'dataset/preproc_data_DS/train_test_list_dump', 'mean_std_train_full_tlStructEsmc.csv'))
         specific_mean_std_row = mean_std_train_df[(mean_std_train_df['spec'] == 'human') & (mean_std_train_df['img_resol'] == self.img_resoln) & (mean_std_train_df['dbl_combi_flg'] == self.dbl_combi_flg)]
         mean_seq = (specific_mean_std_row['mean_0'].values[0], specific_mean_std_row['mean_1'].values[0], specific_mean_std_row['mean_2'].values[0])
         std_seq = (specific_mean_std_row['std_0'].values[0], specific_mean_std_row['std_1'].values[0], specific_mean_std_row['std_2'].values[0])

@@ -9,7 +9,7 @@ import lightning as L
 import torch
 from torchmetrics.classification import AveragePrecision
 from lightning.pytorch.loggers import TensorBoardLogger
-from proc.img_p2ip.img_p2ip_trx_datamodule_train_full_struct_esmc_v2 import ImgP2ipCustomDataModule
+from codebase.proc.img_p2ip.img_p2ip_trx_datamodule_train_full import ImgP2ipCustomDataModule
 from proc.img_p2ip.img_p2ip_trx.arch_CDAMViT import CDAMViT
 
 

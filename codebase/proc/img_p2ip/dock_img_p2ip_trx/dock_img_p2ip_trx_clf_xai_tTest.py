@@ -8,7 +8,7 @@ import glob
 import joblib
 import pandas as pd
 import scipy.stats as stats
-from proc.img_p2ip.img_p2ip_trx.img_p2ip_trx_clf_train_struct_esmc_v2 import ImgP2ipTrx
+from proc.img_p2ip.img_p2ip_trx.img_p2ip_trx_clf_train import ImgP2ipTrx
 from utils import DockUtils
 from utils import PPIPUtils
 

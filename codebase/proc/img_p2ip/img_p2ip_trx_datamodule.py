@@ -10,7 +10,7 @@ import pandas as pd
 from torch.utils.data import DataLoader
 from torch.utils.data import WeightedRandomSampler
 from torchvision import transforms
-from proc.img_p2ip.img_p2ip_dataset_struct_esmc_v2 import ImgP2ipCustomDataset
+from codebase.proc.img_p2ip.img_p2ip_trx_dataset import ImgP2ipCustomDataset
 
 
 class ImgP2ipCustomDataModule(L.LightningDataModule):
@@ -23,8 +23,8 @@ class ImgP2ipCustomDataModule(L.LightningDataModule):
         self.spec_type = spec_type
         self.dbl_combi_flg = dbl_combi_flg
         self.weighted_sampling = weighted_sampling
-    
-    
+
+
     def setup(self, stage=None):
         preproc_data_path = os.path.join(self.root_path, 'dataset/preproc_data_DS/train_test_list_dump')
         mean_std_train_df = pd.read_csv(os.path.join(self.root_path, 'dataset/preproc_data_DS/train_test_list_dump', 'mean_std_train_full_tlStructEsmc.csv'))

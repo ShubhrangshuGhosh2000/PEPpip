@@ -9,8 +9,8 @@ import joblib
 import torch
 import numpy as np
 import pandas as pd
-from proc.img_p2ip.dock_img_p2ip_trx_datamodule_struct_esmc_v2 import DockImgP2ipCustomDataModule
-from proc.img_p2ip.img_p2ip_trx.img_p2ip_trx_clf_train_struct_esmc_v2 import ImgP2ipTrx
+from codebase.proc.img_p2ip.dock_img_p2ip_trx_datamodule import DockImgP2ipCustomDataModule
+from proc.img_p2ip.img_p2ip_trx.img_p2ip_trx_clf_train import ImgP2ipTrx
 from utils import PPIPUtils, ProteinContactMapUtils
 
 

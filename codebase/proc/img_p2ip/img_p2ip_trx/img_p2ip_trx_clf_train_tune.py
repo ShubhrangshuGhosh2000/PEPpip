@@ -18,7 +18,7 @@ from ray.tune import CLIReporter
 from ray.tune.integration.pytorch_lightning import (
     TuneReportCallback, TuneReportCheckpointCallback)
 from ray.tune.schedulers import ASHAScheduler, PopulationBasedTraining 
-from proc.img_p2ip.img_p2ip_datamodule_struct_esmc_v2 import ImgP2ipCustomDataModule
+from codebase.proc.img_p2ip.img_p2ip_datamodule import ImgP2ipCustomDataModule
 from proc.img_p2ip.img_p2ip_trx.arch_CDAMViT import CDAMViT
 
 

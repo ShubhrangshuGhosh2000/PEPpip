@@ -9,7 +9,7 @@ import joblib
 import pandas as pd
 from torch.utils.data import DataLoader
 from torchvision import transforms
-from proc.img_p2ip.dock_img_p2ip_trx_dataset_struct_esmc_v2 import DockImgP2ipCustomDataset
+from codebase.proc.img_p2ip.dock_img_p2ip_trx_dataset import DockImgP2ipCustomDataset
 
 
 class DockImgP2ipCustomDataModule(L.LightningDataModule):

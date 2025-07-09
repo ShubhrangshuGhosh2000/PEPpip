@@ -11,7 +11,7 @@ import torch.nn  as nn
 import torch.optim as optim
 from torchmetrics.classification import AveragePrecision
 from lightning.pytorch.loggers import TensorBoardLogger
-from proc.img_p2ip.img_p2ip_datamodule_struct_esmc_v2 import ImgP2ipCustomDataModule
+from codebase.proc.img_p2ip.img_p2ip_datamodule import ImgP2ipCustomDataModule
 from proc.img_p2ip.img_p2ip_cnn.arch_resnet import ResNet
 from utils import PPIPUtils
 
