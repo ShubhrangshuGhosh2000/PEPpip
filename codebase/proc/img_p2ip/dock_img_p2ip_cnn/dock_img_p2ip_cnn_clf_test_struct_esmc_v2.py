@@ -16,8 +16,6 @@ from proc.img_p2ip.img_p2ip_cnn.img_p2ip_cnn_clf_train_struct_esmc_v2 import Img
 def load_final_ckpt_model(root_path='./', model_path='./', partial_model_name = 'ImgP2ipCnn'):
     final_chkpt_path = os.path.join(model_path, partial_model_name + '*.ckpt' )
     final_ckpt_file_name = glob.glob(final_chkpt_path, recursive=False)[0]
-    ################################
-    ################################
     model = ImgP2ipCnn.load_from_checkpoint(final_ckpt_file_name)
     return model
 

@@ -90,24 +90,6 @@ def create_predicted_contact_map(root_path='./', model_path='./', docking_versio
 
 
 def create_pred_attr_map_2d(non_zero_pxl_indx_lst_lst, pxl_attr_lst, attr_mode):
-    """
-    Create a 2D numpy array of attributions based on the given lists.
-    Parameters:
-    - non_zero_pxl_indx_lst_lst (list): A list of lists where each inner list contains the non-zero pixel index (H,W) i.e. 2 integers
-    - non_zero_pxl_attr_lst (list): A list of floats of the same length as 1st argument list, containing the total attribution for all the 3 channels together for the non-zero pixel.
-    Returns:
-    - numpy.ndarray: A 2D numpy array initiated with zeros and populated based on input argument lists.
-    Example:
-    >>> lst1 = [[3, 1], [4, 2], [2, 0], [5, 2]]
-    >>> lst2 = [0.1, 0.2, 0.3, 0.4]
-    >>> create_pred_attr_map_2d(lst1, lst2)
-    array([[0. , 0. , 0. ],
-           [0. , 0. , 0. ],
-           [0.3, 0. , 0. ],
-           [0. , 0.1, 0. ],
-           [0. , 0., 0.2 ],
-           [0. , 0., 0.4 ]])
-    """
     h_max = max(non_zero_pxl_indx_lst_lst, key=lambda x: x[0])[0]
     w_max = max(non_zero_pxl_indx_lst_lst, key=lambda x: x[1])[1]
     pred_attr_map_2d = np.zeros((h_max+1, w_max+1))
@@ -178,10 +160,6 @@ def calculate_emd_betwn_gt_and_pred_contact_maps(root_path='./', model_path='./'
             pred_contact_map[pred_contact_map > percentile] = 1
         emd = DockUtils.calculateEMD(pred_contact_map, gt_contact_map)
         perf_metric_dict = DockUtils.evaluate_contact_maps(pred_contact_map, gt_contact_map, distance_metric='cityblock')
-        pred_contact_map_plot_path = os.path.join(contact_heatmap_plt_dir, f'prot_{prot_1_id}_prot_{prot_2_id}_{tp_fn_lst[-1]}_attrMode_{attr_mode}_minMaxMode_{min_max_mode}_pcmp_mode_{pcmp_mode}_pred_contact_map.png')
-        generate_pred_contact_heatmap_plot(pred_contact_map, title='Predicted interaction map', row = prot_1_id, col=prot_2_id, save_path=pred_contact_map_plot_path)
-        gt_contact_map_plot_path = os.path.join(contact_heatmap_plt_dir, f'prot_{prot_1_id}_prot_{prot_2_id}_gt_contact_map.png')
-        generate_gt_contact_heatmap_plot(gt_contact_map, title='gt interaction map', row = prot_1_id, col=prot_2_id, save_path=gt_contact_map_plot_path)
         dock_test_row_idx_lst.append(index); prot_1_id_lst.append(prot_1_id); prot_2_id_lst.append(prot_2_id)
         attr_mode_lst.append(attr_mode); min_max_mode_lst.append(min_max_mode); pcmp_mode_lst.append(pcmp_mode); emd_lst.append(emd)
         aupr_lst.append(perf_metric_dict['aupr']); auroc_lst.append(perf_metric_dict['auroc']); specificity_lst.append(perf_metric_dict['specificity'])
@@ -222,56 +200,6 @@ def create_consolidated_emd_res_csv(emd_res_df_lst=None, root_path='./', model_p
         grouped_df.to_csv(os.path.join(emd_result_dir, f'overall_eval_res_9Xp.csv'), index=False)
 
 
-def generate_pred_contact_heatmap_plot(data_array_2d, title='Heatmap Plot with Colormap', row='prot_1_id', col='prot_2_id', save_path='heatmap_plot.png'):
-    """
-    Generate a heatmap plot using Matplotlib for the given numpy array.
-    Parameters:
-    - data_array_2d (numpy.ndarray): Input 2D array of floats with values between 0.0 and 1.0.
-    - save_path (str): Path to save the generated heatmap plot image (default: 'heatmap_plot.png').
-    Returns:
-    - None
-    Example:
-    >>> data_array_2d = np.random.rand(5, 8)  
-    >>> generate_pred_contact_heatmap_plot(data_array_2d, save_path='my_heatmap_plot.png')
-    """
-    data_array_2d = np.array(data_array_2d)
-    if data_array_2d.ndim != 2:
-        raise ValueError("Input array must be a 2D numpy array")
-    cmap = plt.cm.gray_r
-    plt.imshow(data_array_2d, cmap=cmap, norm=None, interpolation=None, origin='upper', aspect=None)
-    cbar = plt.colorbar()
-    plt.xlabel(f'{col} (Col Idx : Y Axis)')
-    plt.ylabel(f'{row} (Row Indices : X Axis)')
-    plt.title(f'{title}')
-    plt.savefig(save_path, dpi=300, bbox_inches='tight')
-    plt.close()
-
-
-def generate_gt_contact_heatmap_plot(data_array_2d, title='Heatmap Plot with Colormap', row='prot_1_id', col='prot_2_id', save_path='heatmap_plot.png'):
-    """
-    Generate a heatmap plot using Matplotlib for the given numpy array.
-    Parameters:
-    - data_array_2d (numpy.ndarray): Input 2D array of floats with values between 0.0 and 1.0.
-    - save_path (str): Path to save the generated heatmap plot image (default: 'heatmap_plot.png').
-    Returns:
-    - None
-    Example:
-    >>> data_array_2d = np.random.rand(5, 8)  
-    >>> generate_gt_contact_heatmap_plot(data_array_2d, save_path='my_heatmap_plot.png')
-    """
-    data_array_2d = np.array(data_array_2d)
-    if data_array_2d.ndim != 2:
-        raise ValueError("Input array must be a 2D numpy array")
-    cmap = plt.cm.gray_r
-    plt.imshow(data_array_2d, cmap=cmap, norm=None, interpolation=None, origin='upper', aspect=None)
-    cbar = plt.colorbar()
-    plt.xlabel(f'{col} (Col Idx : Y Axis)')
-    plt.ylabel(f'{row} (Row Indices : X Axis)')
-    plt.title(title)
-    plt.savefig(save_path, dpi=300, bbox_inches='tight')
-    plt.close()
-
-    
 if __name__ == '__main__':
     root_path = os.path.join('/project/root/directory/path/here')
     model_path = os.path.join(root_path, 'dataset/proc_data_tl_feat_to_img/img_p2ip_cnn/train/ResNet_tlStructEsmc_r400n18DnoWS')
