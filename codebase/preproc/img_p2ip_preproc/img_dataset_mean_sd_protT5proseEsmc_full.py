@@ -7,7 +7,7 @@ import pandas as pd
 import torch
 import joblib
 from torch.utils.data import DataLoader
-from proc.img_p2ip.img_p2ip_dataset_train_full_struct_esmc_v2 import ImgP2ipCustomDataset
+from codebase.proc.img_p2ip.img_p2ip_dataset_train_full import ImgP2ipCustomDataset
 
 
 def calc_mean_sd_whole_img_dataset(root_path='./', spec_type='human', img_resoln=256, dbl_combi_flg=False, stage='test'):

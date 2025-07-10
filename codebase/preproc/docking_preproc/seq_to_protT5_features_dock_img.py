@@ -5,13 +5,13 @@ import joblib
 import pandas as pd
 path_root = Path(__file__).parents[2]  
 sys.path.insert(0, str(path_root))
-from utils import preproc_tl_util_dock_img
+from codebase.utils import preproc_protT5_util_dock_img
 
 
 def prepare_tl_feat_for_dock_seq_for_img(root_path='./', protTrans_model_path='./', protTrans_model_name = 'prot_t5_xl_uniref50'
                                          , docking_version = '5_5', restricted_len = 400):
     dock_seq_df = pd.read_csv(os.path.join(root_path,f'dataset/preproc_data_docking_BM_{docking_version}', f'dock_seq_lenLimit_{restricted_len}.csv'))
-    features_lst, features_2d_lst  = preproc_tl_util_dock_img.extract_feat_from_protTrans(dock_seq_df['seq'].tolist(), protTrans_model_path, protTrans_model_name)
+    features_lst, features_2d_lst  = preproc_protT5_util_dock_img.extract_feat_from_protTrans(dock_seq_df['seq'].tolist(), protTrans_model_path, protTrans_model_name)
     for index, row in dock_seq_df.iterrows():
         prot_id = row['prot_id']
         prot_2dArr = features_2d_lst[index]
