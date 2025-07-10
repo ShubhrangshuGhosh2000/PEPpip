@@ -5,7 +5,7 @@ import joblib
 import pandas as pd
 path_root = Path(__file__).parents[2]  
 sys.path.insert(0, str(path_root))
-from utils import preproc_tl_util_DS_img
+from codebase.utils import preproc_protT5_util_DS_img
 
 
 def parse_DS_to_fasta(root_path='./', spec_type = 'human', restricted_len=400):
@@ -29,7 +29,7 @@ def parse_DS_to_fasta(root_path='./', spec_type = 'human', restricted_len=400):
 
 def prepare_tl_feat_for_DS_seq_for_img_v2(root_path='./', protTrans_model_path='./', protTrans_model_name = 'prot_t5_xl_uniref50', spec_type = 'human', restricted_len=400):
     DS_seq_df = pd.read_csv(os.path.join(root_path,'dataset/preproc_data_DS/seqs', 'DS_' + spec_type + '_seq_len' + str(restricted_len) + '.csv'))
-    features_lst, features_2d_lst  = preproc_tl_util_DS_img.extract_feat_from_protTrans(DS_seq_df['seq'].tolist(), protTrans_model_path, protTrans_model_name, spec_type)
+    features_lst, features_2d_lst  = preproc_protT5_util_DS_img.extract_feat_from_protTrans(DS_seq_df['seq'].tolist(), protTrans_model_path, protTrans_model_name, spec_type)
     for index, row in DS_seq_df.iterrows():
         prot_id = row['prot_id']
         prot_2dArr = features_2d_lst[index]
