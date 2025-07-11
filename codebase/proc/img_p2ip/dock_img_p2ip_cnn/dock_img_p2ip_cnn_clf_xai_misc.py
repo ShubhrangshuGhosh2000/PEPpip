@@ -125,8 +125,7 @@ def calculate_emd_betwn_gt_and_pred_contact_maps(root_path='./', model_path='./'
     doc_test_tsv_fl_nm_loc = os.path.join(root_path, f'dataset/preproc_data_docking_BM_{docking_version}/derived_feat/dock', 'dock_test_lenLimit_400.tsv')
     dock_test_df = pd.read_csv(doc_test_tsv_fl_nm_loc, sep='\t', header=None, names=['prot_1_id', 'prot_2_id', 'test_labels'])
     dock_test_row_idx_lst, prot_1_id_lst, prot_2_id_lst, attr_mode_lst, min_max_mode_lst, tp_fn_lst, emd_lst, pcmp_mode_lst = [], [], [], [], [], [], [], []  
-    aupr_lst, auroc_lst, specificity_lst, precision_lst, recall_lst, f1_score_lst = [], [], [], [], [], []  
-    tp_cont_lst, fp_cont_lst, fn_cont_lst, tn_cont_lst = [], [], [], []  
+    top_Lby5_prec_lst, top_Lby10_prec_lst, top_50_prec_lst = [], [], []  
     for index, row in dock_test_df.iterrows():
         prot_1_id, prot_2_id = row['prot_1_id'], row['prot_2_id']
         protein_name, chain_1_name = prot_1_id.split('_')
@@ -159,19 +158,14 @@ def calculate_emd_betwn_gt_and_pred_contact_maps(root_path='./', model_path='./'
             pred_contact_map[pred_contact_map <= percentile] = 0
             pred_contact_map[pred_contact_map > percentile] = 1
         emd = DockUtils.calculateEMD(pred_contact_map, gt_contact_map)
-        perf_metric_dict = DockUtils.evaluate_contact_maps(pred_contact_map, gt_contact_map, distance_metric='cityblock')
+        perf_metric_dict = DockUtils.evaluate_contact_maps(pred_contact_map, gt_contact_map)
         dock_test_row_idx_lst.append(index); prot_1_id_lst.append(prot_1_id); prot_2_id_lst.append(prot_2_id)
         attr_mode_lst.append(attr_mode); min_max_mode_lst.append(min_max_mode); pcmp_mode_lst.append(pcmp_mode); emd_lst.append(emd)
-        aupr_lst.append(perf_metric_dict['aupr']); auroc_lst.append(perf_metric_dict['auroc']); specificity_lst.append(perf_metric_dict['specificity'])
-        precision_lst.append(perf_metric_dict['precision']); recall_lst.append(perf_metric_dict['recall']); f1_score_lst.append(perf_metric_dict['f1_score'])
-        tp_cont_lst.append(perf_metric_dict['conf_matrix_dict']['tp']); fp_cont_lst.append(perf_metric_dict['conf_matrix_dict']['fp'])
-        fn_cont_lst.append(perf_metric_dict['conf_matrix_dict']['fn']); tn_cont_lst.append(perf_metric_dict['conf_matrix_dict']['tn'])
-    
+        top_Lby5_prec_lst.append(perf_metric_dict['top_Lby5_prec']); top_Lby10_prec_lst.append(perf_metric_dict['top_Lby10_prec']); top_50_prec_lst.append(perf_metric_dict['top_50_prec'])
     emd_res_df = pd.DataFrame({'dock_test_row_idx': dock_test_row_idx_lst, 'prot_1_id': prot_1_id_lst, 'prot_2_id': prot_2_id_lst, 'min_max_mode': min_max_mode_lst
-                           , 'attr_mode': attr_mode_lst, 'tp_fn': tp_fn_lst, 'pcmp_mode': pcmp_mode, 'emd': emd_lst
-                           , 'aupr': aupr_lst, 'auroc': auroc_lst, 'specificity': specificity_lst
-                           , 'precision': precision_lst, 'recall': recall_lst, 'f1_score': f1_score_lst
-                           , 'tp_cont': tp_cont_lst, 'fp_cont': fp_cont_lst, 'fn_cont': fn_cont_lst, 'tn_cont': tn_cont_lst})
+                                , 'attr_mode': attr_mode_lst, 'tp_fn': tp_fn_lst, 'pcmp_mode': pcmp_mode, 'emd': emd_lst
+                                , 'top_Lby5_prec': top_Lby5_prec_lst, 'top_Lby10_prec': top_Lby10_prec_lst, 'top_50_prec': top_50_prec_lst
+                            })
     return emd_res_df
 
 
@@ -188,12 +182,9 @@ def create_consolidated_emd_res_csv(emd_res_df_lst=None, root_path='./', model_p
         consolidated_emd_res_df.to_csv(os.path.join(emd_result_dir, f'gt_vs_pred_emd_9Xp.csv'), index=False)
     consolidated_emd_res_df = consolidated_emd_res_df.drop(columns=['dock_test_row_idx', 'prot_1_id', 'prot_2_id'])
     grouped_df = consolidated_emd_res_df.groupby(['tp_fn', 'attr_mode', 'min_max_mode', 'pcmp_mode']).agg(
-                                aupr_avg=('aupr', 'mean'), auroc_avg=('auroc', 'mean'), specif_avg=('specificity', 'mean'),
-                                prec_avg=('precision', 'mean'), recall_avg=('recall', 'mean'), f1_avg=('f1_score', 'mean'),
-                                tp_cont_sum=('tp_cont', 'sum'), fp_cont_sum=('fp_cont', 'sum'), fn_cont_sum=('fn_cont', 'sum'), tn_cont_sum=('tn_cont', 'sum')
+                                top_Lby5_prec_avg=('top_Lby5_prec', 'mean'), top_Lby10_prec_avg=('top_Lby10_prec', 'mean'), top_50_prec_avg=('top_50_prec', 'mean'),
                             ).reset_index()
-    grouped_df['aupr_avg'] = grouped_df['aupr_avg'].round(3); grouped_df['auroc_avg'] = grouped_df['auroc_avg'].round(3); grouped_df['specif_avg'] = grouped_df['specif_avg'].round(3)
-    grouped_df['prec_avg'] = grouped_df['prec_avg'].round(3); grouped_df['recall_avg'] = grouped_df['recall_avg'].round(3); grouped_df['f1_avg'] = grouped_df['f1_avg'].round(3)
+    grouped_df['top_Lby5_prec_avg'] = grouped_df['top_Lby5_prec_avg'].round(3); grouped_df['top_Lby10_prec_avg'] = grouped_df['top_Lby10_prec_avg'].round(3); grouped_df['top_50_prec_avg'] = grouped_df['top_50_prec_avg'].round(3)
     if(consider_full):
         grouped_df.to_csv(os.path.join(emd_result_dir, f'overall_eval_res_full.csv'), index=False)
     else:
@@ -208,7 +199,7 @@ if __name__ == '__main__':
     consider_full_lst = [True]  
     attr_mode_lst = ['total', 'prot_trans', 'esmc', 'prose']  
     min_max_mode_lst = ['N', 'R']  
-    pcmp_mode_lst = ['SCGB', 'CSGB']  
+    pcmp_mode_lst = ['SCG', 'CSG']  
     for docking_version in docking_version_lst:
         for consider_full in consider_full_lst:
             emd_res_df_lst = []  

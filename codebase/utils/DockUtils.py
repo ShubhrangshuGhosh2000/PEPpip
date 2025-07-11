@@ -42,74 +42,58 @@ def shuffle_predContactMap_and_calc_emd(pred_contact_map, gt_contact_map, axis=1
 
 def get_adj_factor():
     try:
-        return float(os.environ.get("adj_factor", 1))
+        return float(os.environ.get("adj_factor", 1.0))
     except ValueError:
         return 1
 
 
-def evaluate_contact_maps(pred_contact_map, gt_contact_map, d=5, distance_metric='cityblock'):
+def evaluate_contact_maps(pred_contact_map, gt_contact_map):
+    if gt_contact_map.shape != pred_contact_map.shape:
+        raise ValueError("The shapes of gt_contact_map and pred_contact_map must match.")
+    top_Lby5_prec = find_topL_prec_score(gt_contact_map, pred_contact_map, metric_type="top_Lby5_prec")
+    top_Lby10_prec = find_topL_prec_score(gt_contact_map, pred_contact_map, metric_type="top_Lby10_prec")
+    top_50_prec = find_topL_prec_score(gt_contact_map, pred_contact_map, metric_type="top_50_prec")
+    perf_metric_dict = {
+        'top_Lby5_prec': top_Lby5_prec,
+        'top_Lby10_prec': top_Lby10_prec,
+        'top_50_prec': top_50_prec
+    }
+    return perf_metric_dict
+
+
+def find_topL_prec_score(gt_contact_map, pred_contact_map, metric_type="top_50_prec"):
     if gt_contact_map.shape != pred_contact_map.shape:
         raise ValueError("The shapes of gt_contact_map and pred_contact_map must match.")
     m, n = gt_contact_map.shape
-    tp, fp, tn, fn = 1, 0, 0, 0  
+    if metric_type == "top_Lby5_prec":
+        l = min(m, n) // 5
+    elif metric_type == "top_Lby10_prec":
+        l = min(m, n) // 10
+    elif metric_type == "top_50_prec":
+        l = 50
+    else:
+        raise ValueError("metric_type must be one of 'top_Lby5_prec', 'top_Lby10_prec', or 'top_50_prec'")
+    l = min(l, m * n)
+    if l == 0:
+        l = 1  
+    flat_pred = pred_contact_map.flatten()
+    sorted_indices = np.argsort(flat_pred)[::-1]  
+    top_l_flat_indices = sorted_indices[:l]
+    top_l_row_indices, top_l_col_indices = np.unravel_index(top_l_flat_indices, (m, n))
+    top_l_positions = list(zip(top_l_row_indices, top_l_col_indices))
     gt_ones = np.argwhere(gt_contact_map == 1)
-    gt_zeroes = np.argwhere(gt_contact_map == 0)
     d = 2 * get_adj_factor()
-    d_negative = 0
-    for i in range(m):
-        for j in range(n):
-            if pred_contact_map[i, j] == 1:
-                if gt_contact_map[i, j] == 1:
+    tp = 0
+    for i, j in top_l_positions:
+        if gt_contact_map[i, j] == 1:
+            tp += 1
+        else:
+            if len(gt_ones) > 0:
+                distances = cdist([(i, j)], gt_ones, metric='cityblock')
+                if np.any(distances <= d):
                     tp += 1
-                else:
-                    distances = cdist([(i, j)], gt_ones, metric=distance_metric)
-                    if np.any(distances <= d):
-                        tp += 1
-                    else:
-                        fp += 1
-            else:  
-                if gt_contact_map[i, j] == 0:
-                    tn += 1
-                else:
-                    distances = cdist([(i, j)], gt_zeroes, metric=distance_metric)
-                    if np.any(distances <= d_negative):
-                        tn += 1
-                    else:
-                        fn += 1
-    conf_matrix_dict = {
-        'tp': tp,
-        'fp': fp,
-        'tn': tn,
-        'fn': fn
-    }
-    precision = tp / (tp + fp)
-    recall = tp / (tp + fn)
-    f1_score = (2 * precision * recall) / (precision + recall)
-    specificity = tn / (tn + fp)
-    gt_flat = gt_contact_map.flatten()
-    pred_flat = pred_contact_map.flatten()
-    aupr = 0.0
-    auroc = 0.0
-    if len(np.unique(gt_flat)) > 1:  
-        precision_curve, recall_curve, _ = precision_recall_curve(gt_flat, pred_flat)
-        aupr = round(auc(recall_curve, precision_curve), 3)
-        auroc = round(roc_auc_score(gt_flat, pred_flat), 3)
-    precision = round(precision, 3)
-    recall = round(recall, 3)
-    f1_score = round(f1_score, 3)
-    specificity = round(specificity, 3)
-    aupr = round(aupr, 3)
-    auroc = round(auroc, 3)
-    perf_metric_dict = {
-        'precision': precision,
-        'recall': recall,
-        'f1_score': f1_score,
-        'specificity': specificity,
-        'aupr': aupr,
-        'auroc': auroc,
-        'conf_matrix_dict': conf_matrix_dict
-    }
-    return perf_metric_dict
+    top_l_precision = tp / l if l > 0 else 0.0
+    return top_l_precision
 
 
 def shuffle_attention_map(attention_map, window_size=16, axis=1, seed=456):
